@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "start": "electron ./src",
+    "build-macOS": "electron-packager ./src OSCMonitor --platform=darwin --arch=x64 --icon=icon.icns --app-version=0.0.1 --overwrite",
+    "build-windows": "electron-packager ./src OSCMonitor --platform=win32 --arch=x64 --icon=icon.ico --overwrite"
+  },
+  "dependencies": {
+    "electron": "^2.0.4",
+    "electron-packager": "^12.0.2"
+  },
+  "private": true
+}
