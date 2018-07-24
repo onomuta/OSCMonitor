@@ -3,168 +3,129 @@
   <meta charset="UTF-8">
   <title>Hello World!</title>
   <style>
-  	body {
-	    background-color: rgba(0, 0, 0, .8);
+    body {
+      background-color: rgba(0, 0, 0, .8);
       margin: 1rem;
-	    color: #fff;
-	    -webkit-app-region: drag;
-	    -webkit-user-select: none;
-		}
-		#log{
-			white-space: pre-line;
-		}
-
-		.setting-btn{
-			position:absolute;
-			top:0;
-			right:0;
-		}
+      color: #fff;
+      -webkit-app-region: drag;
+      -webkit-user-select: none;
+    }
+    #log{
+      white-space: pre-line;
+    }
+    .setting-btn{
+      position:absolute;
+      top:0;
+      right:0;
+    }
   </style>
 </head>
-
 <body>
-	<div id="log"></div>
-	
-	<div class="setting-btn" id="settingBtn" onclick="showModalDialogElement()">⚙</div>
-
-	<dialog id="sample-dialog">
-		<form method="dialog">
-			<span>OSC port</span>
-			<input type="number" min="0" max="9999999" id="OSCInPort" placeholder="Port"/><br>
-
-			<button type="submit" value="cancel">Cancel</button>
-			<button type="submit" value="ok">Ok</button>
-		</form>
-	</dialog>
-
+  <div id="log"></div>
+  <div class="setting-btn" id="settingBtn" onclick="showModalDialogElement()">⚙</div>
+  <dialog id="sample-dialog">
+    <form method="dialog">
+      <span>OSC port</span>
+      <input type="number" min="0" max="9999999" id="OSCInPort" placeholder="Port"/><br>
+      <button type="submit" value="cancel">Cancel</button>
+      <button type="submit" value="ok">Ok</button>
+    </form>
+  </dialog>
 </body>
 <script>
-	var osc = require('node-osc');
-	var OSCInPort = 3333;
-	var log_list = document.querySelector("#log");
-	var OSCLog = new Array(100);
-
+  var osc = require('node-osc');
+  var OSCInPort = 3333;
+  var log_list = document.querySelector("#log");
+  var OSCLog = new Array(100);
   var oscServer = new osc.Server(OSCInPort, '127.0.0.1');
   oscServer.on("message", function (msg, rinfo) {
     console.log("listening:");
     console.log(msg);
-
-		OSCLog.unshift(msg);
-		OSCLog.pop();
-		log_list.innerHTML = OSCLog.join('\n');
+    OSCLog.unshift(msg);
+    OSCLog.pop();
+    log_list.innerHTML = OSCLog.join('\n');
   });
-
-
-	////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
   //MIDI
-	////////////////////////////////////////////////////////////////////////////////
-
-	navigator.requestMIDIAccess().then(onMIDISuccess,onMIDIFailure);
-	var midi = null;
-	var inputs = [];
-	var outputs = [];
-	var output = null;
-	var chs = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16];
-	var ch = 1;
-
-	function onMIDISuccess(m){
-		midi = m;
-		var it = midi.inputs.values();
-		for(var o = it.next(); !o.done; o = it.next()){
-			inputs.push(o.value);
-		}
-		var ot = midi.outputs.values();
-		for(var o = ot.next(); !o.done; o = ot.next()){
-			outputs.push(o.value);
-		}	
-		for(var cnt=0;cnt < inputs.length;cnt++){
-			inputs[cnt].onmidimessage = onMIDIEvent;
-		}
-	}
-
-	var faderCtrlVal = 32;
-	function onMIDIEvent(e){
-		if(e.data[2] != 0){ 
-			// なにかをうけとったときの処理
-			// console.log(e.data[2]);
-			// console.log(e.data[1]);
-			if(e.data[1] == cc1){
-				faderCtrlVal = e.data[2];
-				sliderElem.value = faderCtrlVal;
-			}
-		}
-	}
-	function onMIDIFailure(){
-		console.log("munen!");
-	};
-	
-	function sendCC(cc, val){
-		// if(outputs.length > 0){
-		//   outputs[0].send([0xB0, cc, val]);
-		// }
-		if(output){
-			output.send([0xB0 + ch-1, cc, val]);
-		}
-	}
-
-
+  ////////////////////////////////////////////////////////////////////////////////
+  navigator.requestMIDIAccess().then(onMIDISuccess,onMIDIFailure);
+  var midi = null;
+  var inputs = [];
+  var outputs = [];
+  var output = null;
+  var chs = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16];
+  var ch = 1;
+  function onMIDISuccess(m){
+    midi = m;
+    var it = midi.inputs.values();
+    for(var o = it.next(); !o.done; o = it.next()){
+      inputs.push(o.value);
+    }
+    var ot = midi.outputs.values();
+    for(var o = ot.next(); !o.done; o = ot.next()){
+      outputs.push(o.value);
+    } 
+    for(var cnt=0;cnt < inputs.length;cnt++){
+      inputs[cnt].onmidimessage = onMIDIEvent;
+    }
+  }
+  var faderCtrlVal = 32;
+  function onMIDIEvent(e){
+    if(e.data[2] != 0){ 
+      // なにかをうけとったときの処理
+      // console.log(e.data[2]);
+      // console.log(e.data[1]);
+      if(e.data[1] == cc1){
+        faderCtrlVal = e.data[2];
+        sliderElem.value = faderCtrlVal;
+      }
+    }
+  }
+  function onMIDIFailure(){
+    console.log("munen!");
+  };
+  function sendCC(cc, val){
+    // if(outputs.length > 0){
+    //   outputs[0].send([0xB0, cc, val]);
+    // }
+    if(output){
+      output.send([0xB0 + ch-1, cc, val]);
+    }
+  }
   ////////////////////////////////////////////////////////////////////////////////
   // Dialog
-	////////////////////////////////////////////////////////////////////////////////
-
-	var dialogData = 1234;
-	var OSCOut = 7000;
-	var cc1 = 1;
-	const dlg = document.querySelector('#sample-dialog');
-	//Escによるキャンセルをさせない
-	dlg.addEventListener('cancel', (event) => {
-		'use strict';
-		event.preventDefault();
-	});
-	function showModalDialogElement() {
-		'use strict';
-
-		// document.querySelector('#OSCOut').value = OSCOut;
-		document.querySelector('#OSCInPort').value = OSCInPort;
-
-		return new Promise((resolve, reject) => {
-			dlg.showModal();
-			function onClose(event) {
-				// 2017/2/5現在Chromium:v54のためaddEventListenerの{once: true}は利用できないため自力で解放。v55になれば{once: true}を利用するのが良いと思います。
-				dlg.removeEventListener('close', onClose);
-				if (dlg.returnValue === 'ok') { //returnValueにvalue属性の値が入る
-					// const inputValue = document.querySelector('#input').value;//入力値を取得
-					// alert(inputValue);//テストのためalert
-					// resolve(inputValue);//入力値をresolve
-
-					OSCInPort = document.querySelector('#OSCInPort').value;
-					// oscClient = new osc.Client('127.0.0.1', OSCOut);
-
-					// cc1 = document.querySelector('#cc1').value;
-
-					oscServer.kill("message", function (msg, rinfo) {
-					});
-
-
-					// oscServer = new osc.Server(OSCInPort, '127.0.0.1');
-
-					// oscServer.on("message", function (msg, rinfo) {
-					// 	// console.log("listening:");
-					// 	// console.log(msg);
-					// 	OSCLog.unshift(msg);
-					// 	OSCLog.pop();
-					// 	log_list.innerHTML = OSCLog.join('\n');
-					// });
-
-				} else {
-					reject();
-				}
-			}
-			dlg.addEventListener('close', onClose, {once: true});
-		});
-	}
-
-
-
+  ////////////////////////////////////////////////////////////////////////////////
+  var OSCOutPort = 7000;
+  var cc1 = 1;
+  const dlg = document.querySelector('#sample-dialog');
+  //Escによるキャンセルをさせない
+  dlg.addEventListener('cancel', (event) => {
+    'use strict';
+    event.preventDefault();
+  });
+  function showModalDialogElement() {
+    'use strict';
+    document.querySelector('#OSCInPort').value = OSCInPort;
+    return new Promise((resolve, reject) => {
+      dlg.showModal();
+      function onClose(event) {
+        // 2017/2/5現在Chromium:v54のためaddEventListenerの{once: true}は利用できないため自力で解放。v55になれば{once: true}を利用するのが良いと思います。
+        dlg.removeEventListener('close', onClose);
+        if (dlg.returnValue === 'ok') { //returnValueにvalue属性の値が入る
+          OSCInPort = document.querySelector('#OSCInPort').value;
+          oscServer.kill();
+          oscServer = new osc.Server(OSCInPort, '127.0.0.1');
+          oscServer.on("message", function (msg, rinfo) {
+           OSCLog.unshift(msg);
+           OSCLog.pop();
+           log_list.innerHTML = OSCLog.join('\n');
+          });
+        } else {
+          reject();
+        }
+      }
+      dlg.addEventListener('close', onClose, {once: true});
+    });
+  }
 </script>
 </html>

@@ -15,7 +15,7 @@ var id = powerSaveBlocker.start('prevent-display-sleep')
 
 
 function createWindow() {
-  var windowHeight = 600;
+  var windowHeight = 400;
   var dispWindowFrame = false;
   // macOS以外のウィンドウ設定
   if (process.platform !== 'darwin') {
@@ -26,7 +26,7 @@ function createWindow() {
   // メインウィンドウを作成します
   mainWindow = new BrowserWindow({
     // ウィンドウ作成時のオプション
-    width: 400,
+    width: 300,
     height: windowHeight,
     transparent: true,    // ウィンドウの背景を透過
     frame: dispWindowFrame,     // 枠の無いウィンドウ
@@ -57,7 +57,7 @@ function createWindow() {
   }));
 
   // デベロッパーツールの起動
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
   // メインウィンドウが閉じられたときの処理
   mainWindow.on('closed', () => {
